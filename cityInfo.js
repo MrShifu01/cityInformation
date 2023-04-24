@@ -1,12 +1,17 @@
-let city = "johannesburg";
 
-async function cityInfo(city) {
+const jsdom = require('jsdom');
+const { JSDOM } = jsdom;
+
+const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`);
+const document = dom.window.document;
+
+async function cityInfo(cityIndex) {
     try {
         const fetch = (await import('node-fetch')).default;
 
-        // Geo - City Population
-        const popUrl = 'https://wft-geo-db.p.rapidapi.com/v1/geo/cities?countryIds=Q258&minPopulation=3000000'
-        const popOptions = {
+        // City Population + Latitude and Longitude
+        const geoUrl = 'https://wft-geo-db.p.rapidapi.com/v1/geo/cities?countryIds=Q258&minPopulation=3000000'
+        const geoOptions = {
             method: 'GET',
             headers: {
                 'content-type': 'application/octet-stream',
@@ -14,32 +19,26 @@ async function cityInfo(city) {
                 'X-RapidAPI-Host': 'wft-geo-db.p.rapidapi.com'
             }
         };
-        const popResponse = await fetch(popUrl, popOptions)
+        const geoResponse = await fetch(geoUrl, geoOptions)
 
-        if (!popResponse.ok) throw new Error("Error fetching City data")
+        if (!geoResponse.ok) throw new Error("Error fetching City data")
 
-        result = await popResponse.json()
-        let popData = result.data
+        result = await geoResponse.json()
+        let geoData = result.data
 
         // Converting the names of South Africas 4 biggest cities
-        for (let i = 0; i < popData.length; i++) {
-            if (popData[i].city.includes("Cape Town")) {
-                popData[i].city = "Cape Town"
+        for (let i = 0; i < geoData.length; i++) {
+            if (geoData[i].city.includes("Cape Town")) {
+                geoData[i].city = "Cape Town"
+            } else if (geoData[i].city.includes("Tshwane")) {
+                geoData[i].city = "Pretoria"
+            } else if (geoData[i].city.includes("eThekweni")) {
+                geoData[i].city = "Durban"
             }
-        }
+        } 
 
-        city = popData[0].city
-        
-        // Geo - Longitude and Latitude
-        const geoUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=63b2d23bc2de38b4670f9725b0985bb5`;
-        const geoResponse = await fetch(geoUrl);
-
-        if (!geoResponse.ok) throw new Error('Error fetching geolocation data.');
-
-        const geoData = await geoResponse.json();
-
-        // Geo - Elevation
-        const eleUrl = `https://api.open-meteo.com/v1/elevation?latitude=${geoData[0].lat}&longitude=${geoData[0].lon}`;
+        // Elevation
+        const eleUrl = `https://api.open-meteo.com/v1/elevation?latitude=${geoData[cityIndex].latitude}&longitude=${geoData[cityIndex].longitude}`;
         const eleResponse = await fetch(eleUrl);
 
         if (!eleResponse.ok) throw new Error("Error fetching elevation data.");
@@ -47,7 +46,7 @@ async function cityInfo(city) {
         const eleData = await eleResponse.json();
 
         // Weather
-        const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${geoData[0].lat}&lon=${geoData[0].lon}&appid=63b2d23bc2de38b4670f9725b0985bb5&units=metric`
+        const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${geoData[cityIndex].latitude}&lon=${geoData[cityIndex].longitude}&appid=63b2d23bc2de38b4670f9725b0985bb5&units=metric`
         const weatherResponse = await fetch(weatherUrl);
 
         if (!weatherResponse.ok) throw new Error('Error fetching weather location data.');
@@ -55,11 +54,11 @@ async function cityInfo(city) {
         const weatherData = await weatherResponse.json();
 
         return {
-            name: geoData[0].name,
-            lat: geoData[0].lat,
-            lon: geoData[0].lon,
+            name: geoData[cityIndex].city,
+            lat: geoData[cityIndex].latitude,
+            lon: geoData[cityIndex].longitude,
             temp: weatherData.main.temp,
-            pop: popData[0].population,
+            pop: geoData[cityIndex].population,
             ele: eleData.elevation,
         };
 
@@ -70,14 +69,14 @@ async function cityInfo(city) {
 }
 
 (async () => {
-    const cityData = await cityInfo(city);
+    const cityData = await cityInfo(0);
     if (cityData) {
-        console.log(`City name: ${cityData.name}`);
+        console.log(`City Name: ${cityData.name}`);
         console.log(`Latitude: ${cityData.lat}`);
         console.log(`Longitude: ${cityData.lon}`);
-        console.log(`Temperature: ${cityData.temp} C`);
-        console.log(`Population: ${cityData.pop}`)
-        console.log(`Elevation: ${cityData.ele}`)
+        console.log(`Temperature: ${cityData.temp}C`);
+        console.log(`Population: ${cityData.pop} people`)
+        console.log(`Elevation: ${cityData.ele}m`)
     } else {
         console.log('Failed to fetch city information.');
     }
