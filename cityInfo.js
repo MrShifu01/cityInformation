@@ -27,13 +27,9 @@ async function cityInfo(city) {
                 popData[i].city = "Cape Town"
             }
         }
-        console.log(popData[0].city)
+
         city = popData[0].city
         
-        
-
-
-
         // Geo - Longitude and Latitude
         const geoUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=63b2d23bc2de38b4670f9725b0985bb5`;
         const geoResponse = await fetch(geoUrl);
@@ -42,7 +38,13 @@ async function cityInfo(city) {
 
         const geoData = await geoResponse.json();
 
+        // Geo - Elevation
+        const eleUrl = `https://api.open-meteo.com/v1/elevation?latitude=${geoData[0].lat}&longitude=${geoData[0].lon}`;
+        const eleResponse = await fetch(eleUrl);
 
+        if (!eleResponse.ok) throw new Error("Error fetching elevation data.");
+
+        const eleData = await eleResponse.json();
 
         // Weather
         const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${geoData[0].lat}&lon=${geoData[0].lon}&appid=63b2d23bc2de38b4670f9725b0985bb5&units=metric`
@@ -56,7 +58,9 @@ async function cityInfo(city) {
             name: geoData[0].name,
             lat: geoData[0].lat,
             lon: geoData[0].lon,
-            temp: weatherData.main.temp, // Access the temperature correctly
+            temp: weatherData.main.temp,
+            pop: popData[0].population,
+            ele: eleData.elevation,
         };
 
         } catch (error) {
@@ -72,6 +76,8 @@ async function cityInfo(city) {
         console.log(`Latitude: ${cityData.lat}`);
         console.log(`Longitude: ${cityData.lon}`);
         console.log(`Temperature: ${cityData.temp} C`);
+        console.log(`Population: ${cityData.pop}`)
+        console.log(`Elevation: ${cityData.ele}`)
     } else {
         console.log('Failed to fetch city information.');
     }
