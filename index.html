@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Meta Data -->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Info App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Heading -->
+    <h1>city-info.dev</h1>
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Container to hold the top elements -->
+        <div class="container top">
+            <!-- Form for input and submit -->
+            <form action="" onsubmit="return false">
+                <input type="text" class="search" placeholder="Try SA's 4 Largest Cities">
+                <button type="submit" class="btn">Search</button>
+            </form>
+            <!-- Error Message -->
+            <p class="error"></p>
+            <section>
+                <!-- Information Display Section -->
+                <div class="container bottom">
+                    <div class="name">City Name:</div>
+                    <div class="population">Population:</div>
+                    <div class="elevation">Elevation:</div>
+                    <div class="temp">Current Temperature:</div>
+                    </div>
+                </div>
+            </section>
+            
+        </div>
+    </div>
+    <!-- JavaScript link -->
+    <script src="script.js"></script>
+</body>
+</html>
